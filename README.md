@@ -6,8 +6,8 @@ simpler [BoW-LSTM](https://github.com/CT15/BoW-LSTM) model.
 
 ## MOOC
 
-MOOC stands for Massive Open Online Courses. It is a massive open online course
-is an online course aimed at unlimited participation and open access via the web.
+MOOC stands for Massive Open Online Courses. It is an online course aimed at 
+unlimited participation and open access via the web.
 
 Source: Wikipedia
 
