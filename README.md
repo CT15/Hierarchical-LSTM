@@ -26,3 +26,8 @@ post.
 ## Model Architecture
 
 ![Architecture](/images/architecture.jpg "Hierarchical LSTM architecture")
+
+## Additional Requirement
+
+This model uses 300d pre-trained GloVe 6B embeddings. You can download it
+[here](https://nlp.stanford.edu/projects/glove/).
