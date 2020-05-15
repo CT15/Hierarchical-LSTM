@@ -18,8 +18,8 @@ BATCH_SIZE = 20
 INTERVENED_RATIO = 0.25
 EPOCHS = 1
 CLIP = 5
-VAL_EVERY = 400
-TB_FOLDER = 'hlstm1'
+VAL_EVERY = 200
+TB_FOLDER = 'hlstm_data1_ep1'
 
 # HELPER FUNCTIONS #
 
@@ -34,12 +34,15 @@ def process_data(df, glove):
         text_sub_ind, sub_wl, sub_labels = [], [], []
         
         for text, label in zip(texts, labels):
-            text_sub_ind.append(glove.sentence_to_indices(text, seq_len=MAX_WORDS))
+            word_list = glove.sentence_to_indices(text, seq_len=MAX_WORDS)
+            assert len(word_list) == MAX_WORDS
+            text_sub_ind.append(word_list)
             sub_wl.append(len(text.split()))
             sub_labels.append(label)
 
         assert len(text_sub_ind) <= MAX_POSTS
-        assert len(sub_labels) <= MAX_POSTS
+        assert len(sub_labels) == len(text_sub_ind)
+        assert len(sub_wl) == len(text_sub_ind)
 
         if len(text_sub_ind) < MAX_POSTS:
             for i in range(MAX_POSTS - len(text_sub_ind)):
@@ -48,6 +51,8 @@ def process_data(df, glove):
                 sub_labels.append(-1)
                 sub_wl.append(1)
         
+        assert len(sub_labels) == MAX_POSTS
+
         text_indices.append(text_sub_ind)
         final_labels.append(sub_labels)
         wl.append(sub_wl)
@@ -59,7 +64,6 @@ def process_data(df, glove):
 def to_data_loader(indices, labels, wl, pl):
     indices, labels = np.array(indices), np.array(labels)
     wl, pl = np.array(wl), np.array(pl)
-
     data = TensorDataset(torch.from_numpy(indices).type('torch.FloatTensor'),
                          torch.from_numpy(labels),
                          torch.from_numpy(wl), torch.from_numpy(pl))
@@ -75,18 +79,20 @@ def evaluate(model, data_loader):
 
     for inputs, labels, wl, pl in data_loader:
         inputs, labels = inputs.to(device), labels.to(device)
-        predictions, _ = model(inputs, wl, pl)
+        predictions = model(inputs, wl, pl)
         _, predictions, truths = model.loss(predictions, labels, pl)
         
         predictions = predictions.tolist()
         truths = truths.tolist()
 
+        print(f'sanity_check2: {len(predictions)}, {len(truths)}')
         a.append(predictions)
         b.append(truths)
 
     a = [int(pred) for predlist in a for pred in predlist]
     b = [int(truth) for truthlist in b for truth in truthlist]
 
+    print(f'sanity_check3: {len(a)}, {len(b)}')
     model.train()
 
     f1 = f1_score(b, a)
@@ -109,6 +115,8 @@ train_texts = list(train.posts)
 print('Init GloVe embedding')
 glove = Glove()
 glove.create_custom_embedding([word for text in train_texts for word in text.split()])
+
+print(len(glove.word2idx))
 
 print('Padding and packing data into data loader')
 train_indices, train_labels, train_wl, train_pl = process_data(train, glove)
@@ -146,7 +154,7 @@ for epoch in range(1, EPOCHS+1):
         loss, _, _ = model.loss(predictions, labels, pl)
 
         training_loss += loss
-        data_completed += len(lengths)
+        data_completed += len(inputs)
         batch_completed += 1
 
         loss.backward()
@@ -157,20 +165,20 @@ for epoch in range(1, EPOCHS+1):
             f1, precision, recall, _, _ = evaluate(model, val_loader)
             print(f'Evaluating now VALIDATE (f1, precision, recall): {f1}, {precision}, {recall}')
 
-            writer_v.add_scalar('val_f1', f1, batch_completed, f1)
-            writer_v.add_scalar('val_precision', precision, batch_completed)
-            writer_v.add_scalar('val_recall', recall, batch_completed)
-            
+            writer_v.add_scalar('f1', f1, batch_completed, f1)
+            writer_v.add_scalar('precision', precision, batch_completed)
+            writer_v.add_scalar('recall', recall, batch_completed)
+
             writer_t.add_scalar('training_loss', training_loss / data_completed, batch_completed)
 
             f1, precision, recall, _, _ = evaluate(model, train_loader)
-            writer_t.add_scalar('val_f1', f1, batch_completed, f1)
-            writer_t.add_scalar('val_precision', precision, batch_completed)
-            writer_t.add_scalar('val_recall', recall, batch_completed)
+            writer_t.add_scalar('f1', f1, batch_completed, f1)
+            writer_t.add_scalar('precision', precision, batch_completed)
+            writer_t.add_scalar('recall', recall, batch_completed)
 
             data_multiple += 1
 
-f1, precision, recall, accuracy, conf_matrix = evaluate(model, test_loader, BATCH_SIZE)
+f1, precision, recall, accuracy, conf_matrix = evaluate(model, test_loader)
 print('TEST')
 print(f'F1: {f1}')
 print(f'Precision: {precision}')
