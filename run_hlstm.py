@@ -1,14 +1,14 @@
 import torch
 import torch.nn as nn
 import numpy as np
+import pandas as pd
+
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import TensorDataset, DataLoader
 from sklearn.metrics import f1_score, recall_score, precision_score, accuracy_score, confusion_matrix
 
 from HierarchicalModel import HierarchicalModel
 from WeightedBCELoss import WeightedBCELoss
-from utils import load_test_train_val
-
 from glove import Glove, create_emb_layer
 
 DATA_NUM = 1
@@ -22,6 +22,15 @@ VAL_EVERY = 200
 TB_FOLDER = 'hlstm_data1_ep1'
 
 # HELPER FUNCTIONS #
+
+def load_test_train_val(number):
+    # number is int from 1 to 5
+    base_dir = f'./separated_data/data{number}'
+    test = pd.read_csv(f'{base_dir}/test.csv', comment='#')
+    train = pd.read_csv(f'{base_dir}/train.csv', comment='#')
+    val = pd.read_csv(f'{base_dir}/val.csv', comment='#')
+    return test, train, val
+
 
 def process_data(df, glove):
     # wl => words_lengths; pl => posts_lengths
