@@ -205,8 +205,8 @@ class HierarchicalModel(nn.Module):
         Output Shape
         ------------
         loss: float
-        predictions: (batch_size * seq_len)
-        truths: (batch_size * seq_len)
+        predictions: (batch_size * seq_len) at most (can be less)
+        truths: (batch_size * seq_len) at most (can be less)
 
         """
 
