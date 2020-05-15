@@ -1,7 +1,8 @@
 # Hierarchical LSTM
 
 The model was initially implemented to solve multiple interventions
-problems for MOOC discussion forums.
+problems for MOOC discussion forums. This is an improvement to the
+simpler [BoW-LSTM](https://github.com/CT15/BoW-LSTM) model.
 
 ## MOOC
 
