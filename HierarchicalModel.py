@@ -170,6 +170,7 @@ class HierarchicalModel(nn.Module):
         outputs = self.dropout(outputs2)
         outputs = self.fc(outputs)
         outputs = self.sigmoid(outputs)
+        #assert outputs2.size() == (batch_size * max_posts, 1)
 
         #outputs = outputs2.view(batch_size, max_posts, -1)
         #assert outputs.size() == (batch_size, max_posts)
@@ -227,6 +228,11 @@ class HierarchicalModel(nn.Module):
 
         truths = truths[indices]
         predictions = predictions[indices]
+
+        a = 0
+        for length in posts_lengths:
+            a += length
+        print(f"sanity_check: {len(truths)}, {len(predictions)}, {a}")
 
         loss = self.criterion.loss(predictions.float(), truths.float())
         
