@@ -5,7 +5,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 import utils
 
-from HierarchicalModel import HierarchicalModel
+from hierarchical_model import HierarchicalModel
 from WeightedBCELoss import WeightedBCELoss
 from glove import Glove, create_emb_layer
 
